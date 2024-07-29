@@ -3,6 +3,7 @@ package com.sancrisxa.spring_security.controller;
 
 import com.sancrisxa.spring_security.controller.dto.LoginRequest;
 import com.sancrisxa.spring_security.controller.dto.LoginResponse;
+import com.sancrisxa.spring_security.entities.Role;
 import com.sancrisxa.spring_security.entities.User;
 import com.sancrisxa.spring_security.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 public class TokenController {
@@ -45,11 +46,14 @@ public class TokenController {
        var now = Instant.now();
        var expiresIn = 300L;
 
+       var scopes = user.get().getRoles().stream().map(Role::getName).collect(Collectors.joining(" "));
+
        var claims = JwtClaimsSet.builder()
                .issuer("mybackend")
                .subject(user.get().getUserId().toString())
                .issuedAt(now)
                .expiresAt(now.plusSeconds(expiresIn))
+               .claim("scope",  scopes)
                .build();
 
        var jwtValue = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
